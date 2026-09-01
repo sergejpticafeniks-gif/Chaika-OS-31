@@ -1,0 +1,1391 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Чайка ОС API",
+    "version": "1.0.0",
+    "description": "Официальный программный интерфейс облачной операционной системы Чайка ОС v31. Позволяет сторонним приложениям интегрироваться с ОС: авторизация пользователей, управление окнами, файловая система, мессенджер, уведомления, хранилище, база данных, GPIO, HASP и многое другое.",
+    "contact": {
+      "name": "Команда Чайка ОС",
+      "url": "https://chaika-os.ru",
+      "email": "api@chaika-os.ru"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    { "url": "https://api.chaika-os.ru/v1", "description": "Производственный сервер" },
+    { "url": "https://sandbox.chaika-os.ru/v1", "description": "Тестовая среда" }
+  ],
+  "security": [{ "BearerAuth": [] }],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT-токен, полученный через /auth/login или /auth/otp/verify"
+      }
+    }
+  },
+  "categories": {
+    "auth": "Аутентификация и авторизация",
+    "user": "Управление пользователем",
+    "desktop": "Рабочий стол и интерфейс",
+    "window": "Управление окнами",
+    "filesystem": "Файловая система",
+    "storage": "Облачное хранилище",
+    "messenger": "Мессенджер Чайка",
+    "notifications": "Уведомления",
+    "database": "База данных",
+    "apps": "Приложения и реестр",
+    "system": "Система и диагностика",
+    "ini": "INI-конфигурации",
+    "hardware": "Аппаратные устройства (GPIO/HASP)",
+    "ai": "AI-ассистент",
+    "crm": "CRM и бизнес-инструменты",
+    "media": "Медиа и Тумба",
+    "settings": "Настройки ОС",
+    "index": "Индексы Я-Россия"
+  },
+  "functions": [
+    {
+      "id": "auth.sendOtp",
+      "category": "auth",
+      "name": "Отправить OTP-код",
+      "method": "POST",
+      "path": "/auth/otp/send",
+      "description": "Отправляет одноразовый пароль на email пользователя для подтверждения регистрации или входа",
+      "params": {
+        "body": { "email": "string" }
+      },
+      "returns": { "message": "string", "expires_in": "number" },
+      "example": { "email": "user@example.com" }
+    },
+    {
+      "id": "auth.verifyOtp",
+      "category": "auth",
+      "name": "Подтвердить OTP-код",
+      "method": "POST",
+      "path": "/auth/otp/verify",
+      "description": "Проверяет OTP-код и возвращает сессионный токен",
+      "params": {
+        "body": { "email": "string", "token": "string" }
+      },
+      "returns": { "access_token": "string", "refresh_token": "string", "user": "UserObject" }
+    },
+    {
+      "id": "auth.login",
+      "category": "auth",
+      "name": "Вход по паролю",
+      "method": "POST",
+      "path": "/auth/login",
+      "description": "Авторизация существующего пользователя по email и паролю",
+      "params": {
+        "body": { "email": "string", "password": "string" }
+      },
+      "returns": { "access_token": "string", "refresh_token": "string", "user": "UserObject" }
+    },
+    {
+      "id": "auth.register",
+      "category": "auth",
+      "name": "Регистрация пользователя",
+      "method": "POST",
+      "path": "/auth/register",
+      "description": "Регистрация нового аккаунта в Чайка ОС. После регистрации доступны все приложения экосистемы",
+      "params": {
+        "body": { "email": "string", "password": "string", "username": "string", "otp_token": "string" }
+      },
+      "returns": { "access_token": "string", "user": "UserObject" }
+    },
+    {
+      "id": "auth.logout",
+      "category": "auth",
+      "name": "Выход из системы",
+      "method": "POST",
+      "path": "/auth/logout",
+      "description": "Завершает текущую сессию и инвалидирует токены",
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "auth.refreshToken",
+      "category": "auth",
+      "name": "Обновить токен",
+      "method": "POST",
+      "path": "/auth/refresh",
+      "description": "Получает новый access_token по refresh_token",
+      "params": {
+        "body": { "refresh_token": "string" }
+      },
+      "returns": { "access_token": "string" }
+    },
+    {
+      "id": "auth.getSession",
+      "category": "auth",
+      "name": "Получить сессию",
+      "method": "GET",
+      "path": "/auth/session",
+      "description": "Возвращает текущую активную сессию пользователя",
+      "returns": { "user": "UserObject", "expires_at": "string" }
+    },
+    {
+      "id": "auth.changePassword",
+      "category": "auth",
+      "name": "Изменить пароль",
+      "method": "PUT",
+      "path": "/auth/password",
+      "description": "Изменяет пароль текущего пользователя",
+      "params": {
+        "body": { "current_password": "string", "new_password": "string" }
+      },
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "auth.requestPasswordReset",
+      "category": "auth",
+      "name": "Сброс пароля",
+      "method": "POST",
+      "path": "/auth/password/reset",
+      "description": "Инициирует процедуру сброса пароля через email",
+      "params": {
+        "body": { "email": "string" }
+      },
+      "returns": { "message": "string" }
+    },
+    {
+      "id": "auth.checkAdmin",
+      "category": "auth",
+      "name": "Проверить права администратора",
+      "method": "GET",
+      "path": "/auth/is-admin",
+      "description": "Проверяет, является ли текущий пользователь администратором ОС",
+      "returns": { "is_admin": "boolean" }
+    },
+    {
+      "id": "user.getProfile",
+      "category": "user",
+      "name": "Получить профиль",
+      "method": "GET",
+      "path": "/user/profile",
+      "description": "Возвращает публичный профиль текущего авторизованного пользователя",
+      "returns": { "id": "string", "username": "string", "email": "string", "display_id": "string", "is_admin": "boolean", "last_seen": "string" }
+    },
+    {
+      "id": "user.updateProfile",
+      "category": "user",
+      "name": "Обновить профиль",
+      "method": "PUT",
+      "path": "/user/profile",
+      "description": "Изменяет данные профиля (имя, фамилия, имя пользователя, город)",
+      "params": {
+        "body": { "first_name": "string", "last_name": "string", "username": "string", "weather_city": "string" }
+      },
+      "returns": { "profile": "UserProfile" }
+    },
+    {
+      "id": "user.getById",
+      "category": "user",
+      "name": "Найти пользователя по ID",
+      "method": "GET",
+      "path": "/user/{id}",
+      "description": "Возвращает публичный профиль пользователя по его UUID или display_id",
+      "returns": { "id": "string", "username": "string", "display_id": "string" }
+    },
+    {
+      "id": "user.search",
+      "category": "user",
+      "name": "Поиск пользователей",
+      "method": "GET",
+      "path": "/user/search",
+      "description": "Ищет пользователей по username или display_id",
+      "params": {
+        "query": { "q": "string", "limit": "number" }
+      },
+      "returns": { "users": "UserProfile[]" }
+    },
+    {
+      "id": "user.getStorageQuota",
+      "category": "user",
+      "name": "Квота хранилища",
+      "method": "GET",
+      "path": "/user/storage-quota",
+      "description": "Возвращает лимит и использование облачного хранилища пользователя",
+      "returns": { "quota_bytes": "number", "used_bytes": "number", "free_bytes": "number" }
+    },
+    {
+      "id": "desktop.openApp",
+      "category": "desktop",
+      "name": "Открыть приложение",
+      "method": "POST",
+      "path": "/desktop/app/open",
+      "description": "Открывает окно приложения на рабочем столе пользователя. Поддерживаются все зарегистрированные appId",
+      "params": {
+        "body": { "app_id": "string", "title": "string", "url": "string", "width": "number", "height": "number" }
+      },
+      "returns": { "window_id": "string" }
+    },
+    {
+      "id": "desktop.getIcons",
+      "category": "desktop",
+      "name": "Иконки рабочего стола",
+      "method": "GET",
+      "path": "/desktop/icons",
+      "description": "Возвращает список иконок на рабочем столе текущего пользователя",
+      "returns": { "icons": "DesktopIcon[]" }
+    },
+    {
+      "id": "desktop.setWallpaper",
+      "category": "desktop",
+      "name": "Сменить обои",
+      "method": "PUT",
+      "path": "/desktop/wallpaper",
+      "description": "Устанавливает новые обои рабочего стола (URL изображения или встроенный ID)",
+      "params": {
+        "body": { "wallpaper_id": "string", "custom_url": "string" }
+      },
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "desktop.getTheme",
+      "category": "desktop",
+      "name": "Получить тему",
+      "method": "GET",
+      "path": "/desktop/theme",
+      "description": "Возвращает текущие настройки темы рабочего стола",
+      "returns": { "theme_id": "string", "accent_color": "string", "taskbar_gradient": "string" }
+    },
+    {
+      "id": "desktop.setTheme",
+      "category": "desktop",
+      "name": "Установить тему",
+      "method": "PUT",
+      "path": "/desktop/theme",
+      "description": "Применяет тему оформления для рабочего стола",
+      "params": {
+        "body": { "theme_id": "string", "accent_color": "string" }
+      },
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "desktop.dispatchEvent",
+      "category": "desktop",
+      "name": "Отправить событие ОС",
+      "method": "POST",
+      "path": "/desktop/event",
+      "description": "Публикует пользовательское событие для взаимодействия с компонентами ОС через window.dispatchEvent",
+      "params": {
+        "body": { "event_name": "string", "detail": "object" }
+      },
+      "returns": { "dispatched": "boolean" }
+    },
+    {
+      "id": "desktop.showNotificationToast",
+      "category": "desktop",
+      "name": "Показать тост-уведомление",
+      "method": "POST",
+      "path": "/desktop/toast",
+      "description": "Отображает всплывающее уведомление в правом нижнем углу рабочего стола",
+      "params": {
+        "body": { "title": "string", "body": "string", "icon": "string", "duration_ms": "number" }
+      },
+      "returns": { "toast_id": "string" }
+    },
+    {
+      "id": "window.list",
+      "category": "window",
+      "name": "Список окон",
+      "method": "GET",
+      "path": "/window/list",
+      "description": "Возвращает список всех открытых окон на рабочем столе",
+      "returns": { "windows": "AppWindow[]" }
+    },
+    {
+      "id": "window.close",
+      "category": "window",
+      "name": "Закрыть окно",
+      "method": "DELETE",
+      "path": "/window/{id}",
+      "description": "Закрывает окно по ID",
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "window.minimize",
+      "category": "window",
+      "name": "Свернуть окно",
+      "method": "PUT",
+      "path": "/window/{id}/minimize",
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "window.maximize",
+      "category": "window",
+      "name": "Развернуть/восстановить окно",
+      "method": "PUT",
+      "path": "/window/{id}/maximize",
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "window.focus",
+      "category": "window",
+      "name": "Активировать окно",
+      "method": "PUT",
+      "path": "/window/{id}/focus",
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "window.setPosition",
+      "category": "window",
+      "name": "Переместить окно",
+      "method": "PUT",
+      "path": "/window/{id}/position",
+      "params": {
+        "body": { "x": "number", "y": "number" }
+      },
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "window.setSize",
+      "category": "window",
+      "name": "Изменить размер окна",
+      "method": "PUT",
+      "path": "/window/{id}/size",
+      "params": {
+        "body": { "width": "number", "height": "number" }
+      },
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "window.getActive",
+      "category": "window",
+      "name": "Активное окно",
+      "method": "GET",
+      "path": "/window/active",
+      "returns": { "window": "AppWindow" }
+    },
+    {
+      "id": "filesystem.listFiles",
+      "category": "filesystem",
+      "name": "Список файлов",
+      "method": "GET",
+      "path": "/fs/files",
+      "description": "Возвращает файлы рабочего стола пользователя",
+      "params": {
+        "query": { "folder_id": "string|null" }
+      },
+      "returns": { "files": "DesktopFile[]" }
+    },
+    {
+      "id": "filesystem.uploadFile",
+      "category": "filesystem",
+      "name": "Загрузить файл",
+      "method": "POST",
+      "path": "/fs/upload",
+      "description": "Загружает файл в личное облачное хранилище и помещает иконку на рабочий стол",
+      "params": {
+        "body": { "file": "binary", "name": "string", "folder_id": "string|null", "pos_x": "number", "pos_y": "number" }
+      },
+      "returns": { "file": "DesktopFile", "url": "string" }
+    },
+    {
+      "id": "filesystem.deleteFile",
+      "category": "filesystem",
+      "name": "Удалить файл",
+      "method": "DELETE",
+      "path": "/fs/files/{id}",
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "filesystem.renameFile",
+      "category": "filesystem",
+      "name": "Переименовать файл",
+      "method": "PUT",
+      "path": "/fs/files/{id}/rename",
+      "params": {
+        "body": { "name": "string" }
+      },
+      "returns": { "file": "DesktopFile" }
+    },
+    {
+      "id": "filesystem.moveFile",
+      "category": "filesystem",
+      "name": "Переместить файл",
+      "method": "PUT",
+      "path": "/fs/files/{id}/move",
+      "params": {
+        "body": { "pos_x": "number", "pos_y": "number", "folder_id": "string|null" }
+      },
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "filesystem.createFolder",
+      "category": "filesystem",
+      "name": "Создать папку",
+      "method": "POST",
+      "path": "/fs/folders",
+      "params": {
+        "body": { "name": "string", "parent_id": "string|null" }
+      },
+      "returns": { "folder": "VfsFolder" }
+    },
+    {
+      "id": "filesystem.listFolders",
+      "category": "filesystem",
+      "name": "Список папок",
+      "method": "GET",
+      "path": "/fs/folders",
+      "params": {
+        "query": { "parent_id": "string|null" }
+      },
+      "returns": { "folders": "VfsFolder[]" }
+    },
+    {
+      "id": "filesystem.deleteFolder",
+      "category": "filesystem",
+      "name": "Удалить папку",
+      "method": "DELETE",
+      "path": "/fs/folders/{id}",
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "filesystem.getFileUrl",
+      "category": "filesystem",
+      "name": "URL файла",
+      "method": "GET",
+      "path": "/fs/files/{id}/url",
+      "description": "Возвращает публичный URL для скачивания файла",
+      "returns": { "url": "string", "expires_at": "string" }
+    },
+    {
+      "id": "storage.upload",
+      "category": "storage",
+      "name": "Загрузить в хранилище",
+      "method": "POST",
+      "path": "/storage/upload",
+      "description": "Загружает файл в указанный бакет Supabase Storage",
+      "params": {
+        "body": { "bucket": "string", "path": "string", "file": "binary" }
+      },
+      "returns": { "path": "string", "url": "string" }
+    },
+    {
+      "id": "storage.download",
+      "category": "storage",
+      "name": "Скачать из хранилища",
+      "method": "GET",
+      "path": "/storage/download",
+      "params": {
+        "query": { "bucket": "string", "path": "string" }
+      },
+      "returns": { "data": "binary" }
+    },
+    {
+      "id": "storage.delete",
+      "category": "storage",
+      "name": "Удалить из хранилища",
+      "method": "DELETE",
+      "path": "/storage/delete",
+      "params": {
+        "body": { "bucket": "string", "path": "string" }
+      },
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "storage.getPublicUrl",
+      "category": "storage",
+      "name": "Публичный URL",
+      "method": "GET",
+      "path": "/storage/url",
+      "params": {
+        "query": { "bucket": "string", "path": "string" }
+      },
+      "returns": { "url": "string" }
+    },
+    {
+      "id": "storage.listFiles",
+      "category": "storage",
+      "name": "Список файлов бакета",
+      "method": "GET",
+      "path": "/storage/list",
+      "params": {
+        "query": { "bucket": "string", "folder": "string" }
+      },
+      "returns": { "files": "StorageFile[]" }
+    },
+    {
+      "id": "messenger.getConversations",
+      "category": "messenger",
+      "name": "Список диалогов",
+      "method": "GET",
+      "path": "/messenger/conversations",
+      "description": "Возвращает все личные диалоги текущего пользователя",
+      "returns": { "conversations": "Conversation[]" }
+    },
+    {
+      "id": "messenger.getMessages",
+      "category": "messenger",
+      "name": "Сообщения диалога",
+      "method": "GET",
+      "path": "/messenger/conversations/{id}/messages",
+      "params": {
+        "query": { "limit": "number", "before": "string" }
+      },
+      "returns": { "messages": "Message[]" }
+    },
+    {
+      "id": "messenger.sendMessage",
+      "category": "messenger",
+      "name": "Отправить сообщение",
+      "method": "POST",
+      "path": "/messenger/conversations/{id}/messages",
+      "params": {
+        "body": { "content": "string", "message_type": "text|voice|image", "reply_to": "string|null" }
+      },
+      "returns": { "message": "Message" }
+    },
+    {
+      "id": "messenger.createConversation",
+      "category": "messenger",
+      "name": "Создать диалог",
+      "method": "POST",
+      "path": "/messenger/conversations",
+      "params": {
+        "body": { "user_id": "string" }
+      },
+      "returns": { "conversation_id": "string" }
+    },
+    {
+      "id": "messenger.getGroups",
+      "category": "messenger",
+      "name": "Список групп",
+      "method": "GET",
+      "path": "/messenger/groups",
+      "returns": { "groups": "ChatGroup[]" }
+    },
+    {
+      "id": "messenger.createGroup",
+      "category": "messenger",
+      "name": "Создать группу",
+      "method": "POST",
+      "path": "/messenger/groups",
+      "params": {
+        "body": { "name": "string", "description": "string", "icon_url": "string" }
+      },
+      "returns": { "group": "ChatGroup" }
+    },
+    {
+      "id": "messenger.getChannels",
+      "category": "messenger",
+      "name": "Список каналов",
+      "method": "GET",
+      "path": "/messenger/channels",
+      "returns": { "channels": "Channel[]" }
+    },
+    {
+      "id": "messenger.getChannelPosts",
+      "category": "messenger",
+      "name": "Посты канала",
+      "method": "GET",
+      "path": "/messenger/channels/{id}/posts",
+      "params": {
+        "query": { "limit": "number" }
+      },
+      "returns": { "posts": "ChannelPost[]" }
+    },
+    {
+      "id": "messenger.sendVoice",
+      "category": "messenger",
+      "name": "Отправить голосовое",
+      "method": "POST",
+      "path": "/messenger/conversations/{id}/voice",
+      "params": {
+        "body": { "audio_blob": "binary", "duration_seconds": "number" }
+      },
+      "returns": { "message": "Message", "voice_url": "string" }
+    },
+    {
+      "id": "messenger.addReaction",
+      "category": "messenger",
+      "name": "Добавить реакцию",
+      "method": "POST",
+      "path": "/messenger/messages/{id}/reaction",
+      "params": {
+        "body": { "emoji_key": "string" }
+      },
+      "returns": { "reactions": "Reaction[]" }
+    },
+    {
+      "id": "messenger.shareToChat",
+      "category": "messenger",
+      "name": "Поделиться в чат",
+      "method": "POST",
+      "path": "/messenger/share",
+      "description": "Вставляет текст или ссылку в активный открытый чат Чайка Мессенджера",
+      "params": {
+        "body": { "text": "string", "conversation_id": "string|null" }
+      },
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "messenger.getUnread",
+      "category": "messenger",
+      "name": "Непрочитанные сообщения",
+      "method": "GET",
+      "path": "/messenger/unread",
+      "returns": { "count": "number", "conversations": "string[]" }
+    },
+    {
+      "id": "notifications.getAll",
+      "category": "notifications",
+      "name": "Список уведомлений",
+      "method": "GET",
+      "path": "/notifications",
+      "params": {
+        "query": { "unread_only": "boolean", "limit": "number" }
+      },
+      "returns": { "notifications": "Notification[]", "unread_count": "number" }
+    },
+    {
+      "id": "notifications.send",
+      "category": "notifications",
+      "name": "Отправить уведомление",
+      "method": "POST",
+      "path": "/notifications",
+      "description": "Создаёт системное уведомление для пользователя (отображается в трее)",
+      "params": {
+        "body": { "user_id": "string", "type": "string", "title": "string", "body": "string" }
+      },
+      "returns": { "notification": "Notification" }
+    },
+    {
+      "id": "notifications.markRead",
+      "category": "notifications",
+      "name": "Отметить как прочитанное",
+      "method": "PUT",
+      "path": "/notifications/{id}/read",
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "notifications.markAllRead",
+      "category": "notifications",
+      "name": "Все прочитаны",
+      "method": "PUT",
+      "path": "/notifications/read-all",
+      "returns": { "updated": "number" }
+    },
+    {
+      "id": "notifications.delete",
+      "category": "notifications",
+      "name": "Удалить уведомление",
+      "method": "DELETE",
+      "path": "/notifications/{id}",
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "notifications.requestBrowser",
+      "category": "notifications",
+      "name": "Запросить браузерные уведомления",
+      "method": "POST",
+      "path": "/notifications/browser/request",
+      "description": "Запрашивает разрешение на браузерные push-уведомления",
+      "returns": { "permission": "granted|denied|default" }
+    },
+    {
+      "id": "database.select",
+      "category": "database",
+      "name": "Выборка данных",
+      "method": "GET",
+      "path": "/db/{table}",
+      "description": "Выполняет SELECT-запрос к разрешённым таблицам базы данных Чайка ОС",
+      "params": {
+        "query": { "select": "string", "filter": "string", "order": "string", "limit": "number", "offset": "number" }
+      },
+      "returns": { "data": "object[]", "count": "number" }
+    },
+    {
+      "id": "database.insert",
+      "category": "database",
+      "name": "Вставка данных",
+      "method": "POST",
+      "path": "/db/{table}",
+      "params": {
+        "body": { "data": "object|object[]" }
+      },
+      "returns": { "data": "object[]" }
+    },
+    {
+      "id": "database.update",
+      "category": "database",
+      "name": "Обновление данных",
+      "method": "PUT",
+      "path": "/db/{table}/{id}",
+      "params": {
+        "body": { "data": "object" }
+      },
+      "returns": { "data": "object" }
+    },
+    {
+      "id": "database.delete",
+      "category": "database",
+      "name": "Удаление данных",
+      "method": "DELETE",
+      "path": "/db/{table}/{id}",
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "database.rpc",
+      "category": "database",
+      "name": "Вызов хранимой процедуры",
+      "method": "POST",
+      "path": "/db/rpc/{function}",
+      "description": "Вызывает PostgreSQL-функцию (RPC) с передачей параметров",
+      "params": {
+        "body": { "params": "object" }
+      },
+      "returns": { "data": "any" }
+    },
+    {
+      "id": "database.subscribe",
+      "category": "database",
+      "name": "Подписка на изменения",
+      "method": "WS",
+      "path": "/db/realtime/{table}",
+      "description": "WebSocket-подписка на изменения таблицы (INSERT/UPDATE/DELETE)",
+      "returns": { "event": "string", "new": "object", "old": "object" }
+    },
+    {
+      "id": "apps.register",
+      "category": "apps",
+      "name": "Зарегистрировать приложение",
+      "method": "POST",
+      "path": "/apps/register",
+      "description": "Регистрирует внешнее веб-приложение в реестре Чайка ОС. После регистрации приложение появляется в Меню Пуск",
+      "params": {
+        "body": {
+          "title": "string",
+          "url": "string",
+          "logo_emoji": "string",
+          "logo_url": "string",
+          "description": "string",
+          "section": "string",
+          "permissions": "string[]",
+          "min_width": "number",
+          "min_height": "number"
+        }
+      },
+      "returns": { "app_id": "string", "client_id": "string", "client_secret": "string" }
+    },
+    {
+      "id": "apps.list",
+      "category": "apps",
+      "name": "Список приложений",
+      "method": "GET",
+      "path": "/apps",
+      "returns": { "apps": "AppDefinition[]" }
+    },
+    {
+      "id": "apps.get",
+      "category": "apps",
+      "name": "Информация о приложении",
+      "method": "GET",
+      "path": "/apps/{id}",
+      "returns": { "app": "AppDefinition" }
+    },
+    {
+      "id": "apps.launch",
+      "category": "apps",
+      "name": "Запустить приложение",
+      "method": "POST",
+      "path": "/apps/{id}/launch",
+      "description": "Открывает окно зарегистрированного приложения на рабочем столе пользователя",
+      "params": {
+        "body": { "width": "number", "height": "number", "params": "object" }
+      },
+      "returns": { "window_id": "string" }
+    },
+    {
+      "id": "apps.unregister",
+      "category": "apps",
+      "name": "Удалить приложение",
+      "method": "DELETE",
+      "path": "/apps/{id}",
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "apps.updateIcon",
+      "category": "apps",
+      "name": "Сменить иконку приложения",
+      "method": "PUT",
+      "path": "/apps/{id}/icon",
+      "params": {
+        "body": { "icon_url": "string" }
+      },
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "apps.getPermissions",
+      "category": "apps",
+      "name": "Разрешения приложения",
+      "method": "GET",
+      "path": "/apps/{id}/permissions",
+      "returns": { "permissions": "string[]" }
+    },
+    {
+      "id": "apps.requestPermission",
+      "category": "apps",
+      "name": "Запросить разрешение",
+      "method": "POST",
+      "path": "/apps/{id}/permissions/request",
+      "description": "Запрашивает у пользователя дополнительные разрешения для приложения (диалог подтверждения)",
+      "params": {
+        "body": { "permission": "string", "reason": "string" }
+      },
+      "returns": { "granted": "boolean" }
+    },
+    {
+      "id": "apps.addToStartMenu",
+      "category": "apps",
+      "name": "Добавить в Меню Пуск",
+      "method": "POST",
+      "path": "/apps/{id}/start-menu",
+      "params": {
+        "body": { "section": "string", "sort_order": "number" }
+      },
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "apps.addToDesktop",
+      "category": "apps",
+      "name": "Добавить на рабочий стол",
+      "method": "POST",
+      "path": "/apps/{id}/desktop-icon",
+      "params": {
+        "body": { "label": "string", "pos_x": "number", "pos_y": "number" }
+      },
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "system.getInfo",
+      "category": "system",
+      "name": "Информация о системе",
+      "method": "GET",
+      "path": "/system/info",
+      "description": "Возвращает версию ОС, список установленных приложений, статус HASP и другие системные данные",
+      "returns": { "version": "string", "build": "string", "apps_count": "number", "hasp_status": "string", "uptime": "number" }
+    },
+    {
+      "id": "system.getLogs",
+      "category": "system",
+      "name": "Системные логи",
+      "method": "GET",
+      "path": "/system/logs",
+      "params": {
+        "query": { "level": "info|warn|error", "limit": "number", "since": "string" }
+      },
+      "returns": { "logs": "LogEntry[]" }
+    },
+    {
+      "id": "system.checkHasp",
+      "category": "system",
+      "name": "Проверить HASP-ключ",
+      "method": "POST",
+      "path": "/system/hasp/check",
+      "description": "Инициирует проверку аппаратного ключа защиты (Sentinel HASP) и возвращает статус лицензии",
+      "params": {
+        "body": { "slot": "number", "vendor_code": "string" }
+      },
+      "returns": { "found": "boolean", "slot": "number", "expiry": "string", "feature_code": "string" }
+    },
+    {
+      "id": "system.getHaspStatus",
+      "category": "system",
+      "name": "Статус HASP",
+      "method": "GET",
+      "path": "/system/hasp/status",
+      "returns": { "status": "found|not_found|unknown", "last_checked": "string" }
+    },
+    {
+      "id": "system.broadcastEvent",
+      "category": "system",
+      "name": "Системное событие",
+      "method": "POST",
+      "path": "/system/events/broadcast",
+      "description": "Публикует системное событие всем подключённым компонентам ОС",
+      "params": {
+        "body": { "event": "string", "payload": "object" }
+      },
+      "returns": { "listeners_notified": "number" }
+    },
+    {
+      "id": "system.getStartMenu",
+      "category": "system",
+      "name": "Структура Меню Пуск",
+      "method": "GET",
+      "path": "/system/start-menu",
+      "returns": { "sections": "StartMenuSection[]" }
+    },
+    {
+      "id": "system.reloadDesktop",
+      "category": "system",
+      "name": "Обновить рабочий стол",
+      "method": "POST",
+      "path": "/system/desktop/reload",
+      "description": "Принудительно обновляет иконки и приложения на рабочем столе",
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "ini.parse",
+      "category": "ini",
+      "name": "Распарсить INI",
+      "method": "POST",
+      "path": "/ini/parse",
+      "description": "Преобразует INI-строку в структурированный JSON-объект с секциями и ключами",
+      "params": {
+        "body": { "content": "string" }
+      },
+      "returns": { "sections": "IniSection[]" }
+    },
+    {
+      "id": "ini.serialize",
+      "category": "ini",
+      "name": "Сериализовать INI",
+      "method": "POST",
+      "path": "/ini/serialize",
+      "description": "Преобразует JSON-объект с секциями обратно в INI-строку",
+      "params": {
+        "body": { "sections": "IniSection[]" }
+      },
+      "returns": { "content": "string" }
+    },
+    {
+      "id": "ini.save",
+      "category": "ini",
+      "name": "Сохранить конфигурацию",
+      "method": "POST",
+      "path": "/ini/configs",
+      "description": "Сохраняет INI-конфигурацию в облаке пользователя с именем устройства",
+      "params": {
+        "body": { "device_name": "string", "ini_content": "string" }
+      },
+      "returns": { "id": "string", "created_at": "string" }
+    },
+    {
+      "id": "ini.list",
+      "category": "ini",
+      "name": "Список конфигураций",
+      "method": "GET",
+      "path": "/ini/configs",
+      "returns": { "configs": "IniConfig[]" }
+    },
+    {
+      "id": "ini.load",
+      "category": "ini",
+      "name": "Загрузить конфигурацию",
+      "method": "GET",
+      "path": "/ini/configs/{id}",
+      "returns": { "config": "IniConfig" }
+    },
+    {
+      "id": "ini.delete",
+      "category": "ini",
+      "name": "Удалить конфигурацию",
+      "method": "DELETE",
+      "path": "/ini/configs/{id}",
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "ini.validate",
+      "category": "ini",
+      "name": "Валидировать INI",
+      "method": "POST",
+      "path": "/ini/validate",
+      "params": {
+        "body": { "content": "string", "schema": "object" }
+      },
+      "returns": { "valid": "boolean", "errors": "string[]" }
+    },
+    {
+      "id": "hardware.gpio.read",
+      "category": "hardware",
+      "name": "Читать GPIO пин",
+      "method": "GET",
+      "path": "/hardware/gpio/{pin}",
+      "description": "Читает текущее состояние GPIO пина подключённого устройства",
+      "returns": { "pin": "number", "value": "number", "mode": "string" }
+    },
+    {
+      "id": "hardware.gpio.write",
+      "category": "hardware",
+      "name": "Записать GPIO пин",
+      "method": "PUT",
+      "path": "/hardware/gpio/{pin}",
+      "params": {
+        "body": { "value": "number" }
+      },
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "hardware.gpio.setMode",
+      "category": "hardware",
+      "name": "Режим GPIO пина",
+      "method": "PUT",
+      "path": "/hardware/gpio/{pin}/mode",
+      "params": {
+        "body": { "mode": "input|output|pwm|analog" }
+      },
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "hardware.serial.send",
+      "category": "hardware",
+      "name": "Отправить в Serial",
+      "method": "POST",
+      "path": "/hardware/serial/send",
+      "params": {
+        "body": { "port": "string", "command": "string", "baud_rate": "number" }
+      },
+      "returns": { "response": "string" }
+    },
+    {
+      "id": "hardware.serial.connect",
+      "category": "hardware",
+      "name": "Подключить Serial",
+      "method": "POST",
+      "path": "/hardware/serial/connect",
+      "params": {
+        "body": { "port": "string", "baud_rate": "number" }
+      },
+      "returns": { "connected": "boolean", "port": "string" }
+    },
+    {
+      "id": "hardware.remote.connect",
+      "category": "hardware",
+      "name": "Удалённое подключение",
+      "method": "POST",
+      "path": "/hardware/remote/connect",
+      "description": "Устанавливает зашифрованное P25-соединение с удалённым устройством по Device ID",
+      "params": {
+        "body": { "device_id": "string" }
+      },
+      "returns": { "session_id": "string", "status": "connected|error" }
+    },
+    {
+      "id": "hardware.remote.command",
+      "category": "hardware",
+      "name": "Команда удалённому устройству",
+      "method": "POST",
+      "path": "/hardware/remote/{session_id}/command",
+      "params": {
+        "body": { "command": "string" }
+      },
+      "returns": { "response": "string" }
+    },
+    {
+      "id": "hardware.hasp.check",
+      "category": "hardware",
+      "name": "Проверить HASP",
+      "method": "POST",
+      "path": "/hardware/hasp/check",
+      "description": "Проверяет наличие аппаратного ключа Sentinel через WebUSB и INI-конфиг",
+      "params": {
+        "body": { "slot": "number", "vendor_code": "string", "feature_code": "string" }
+      },
+      "returns": { "found": "boolean", "info": "HaspInfo" }
+    },
+    {
+      "id": "ai.chat",
+      "category": "ai",
+      "name": "Чат с AI",
+      "method": "POST",
+      "path": "/ai/chat",
+      "description": "Отправляет сообщение AI-ассистенту (Gemini 3) и получает ответ",
+      "params": {
+        "body": { "message": "string", "history": "Message[]", "model": "string", "temperature": "number" }
+      },
+      "returns": { "response": "string", "tokens_used": "number" }
+    },
+    {
+      "id": "ai.analyze",
+      "category": "ai",
+      "name": "Анализ данных",
+      "method": "POST",
+      "path": "/ai/analyze",
+      "description": "Отправляет данные (текст, JSON, код) на анализ AI и получает структурированный результат",
+      "params": {
+        "body": { "data": "string", "task": "string", "output_format": "string" }
+      },
+      "returns": { "result": "any", "confidence": "number" }
+    },
+    {
+      "id": "ai.generateCode",
+      "category": "ai",
+      "name": "Генерация кода",
+      "method": "POST",
+      "path": "/ai/code",
+      "description": "Генерирует код на указанном языке по текстовому описанию задачи",
+      "params": {
+        "body": { "prompt": "string", "language": "string", "context": "string" }
+      },
+      "returns": { "code": "string", "explanation": "string" }
+    },
+    {
+      "id": "ai.speechToText",
+      "category": "ai",
+      "name": "Речь в текст",
+      "method": "POST",
+      "path": "/ai/speech-to-text",
+      "description": "Транскрибирует аудио в текст через Web Speech API",
+      "params": {
+        "body": { "audio": "binary", "language": "string" }
+      },
+      "returns": { "text": "string", "confidence": "number" }
+    },
+    {
+      "id": "ai.translate",
+      "category": "ai",
+      "name": "Перевод текста",
+      "method": "POST",
+      "path": "/ai/translate",
+      "params": {
+        "body": { "text": "string", "target_language": "string", "source_language": "string" }
+      },
+      "returns": { "translated": "string" }
+    },
+    {
+      "id": "ai.summarize",
+      "category": "ai",
+      "name": "Суммаризация",
+      "method": "POST",
+      "path": "/ai/summarize",
+      "params": {
+        "body": { "text": "string", "max_length": "number" }
+      },
+      "returns": { "summary": "string" }
+    },
+    {
+      "id": "crm.getContacts",
+      "category": "crm",
+      "name": "Список контактов",
+      "method": "GET",
+      "path": "/crm/contacts",
+      "params": {
+        "query": { "status": "string", "search": "string", "limit": "number" }
+      },
+      "returns": { "contacts": "CrmContact[]" }
+    },
+    {
+      "id": "crm.createContact",
+      "category": "crm",
+      "name": "Создать контакт",
+      "method": "POST",
+      "path": "/crm/contacts",
+      "params": {
+        "body": { "full_name": "string", "email": "string", "phone": "string", "company": "string", "status": "string" }
+      },
+      "returns": { "contact": "CrmContact" }
+    },
+    {
+      "id": "crm.getDeals",
+      "category": "crm",
+      "name": "Список сделок",
+      "method": "GET",
+      "path": "/crm/deals",
+      "returns": { "deals": "CrmDeal[]" }
+    },
+    {
+      "id": "crm.createDeal",
+      "category": "crm",
+      "name": "Создать сделку",
+      "method": "POST",
+      "path": "/crm/deals",
+      "params": {
+        "body": { "title": "string", "amount": "number", "stage": "string", "contact_id": "string" }
+      },
+      "returns": { "deal": "CrmDeal" }
+    },
+    {
+      "id": "crm.getTasks",
+      "category": "crm",
+      "name": "Список задач",
+      "method": "GET",
+      "path": "/crm/tasks",
+      "returns": { "tasks": "CrmTask[]" }
+    },
+    {
+      "id": "crm.createTask",
+      "category": "crm",
+      "name": "Создать задачу",
+      "method": "POST",
+      "path": "/crm/tasks",
+      "params": {
+        "body": { "title": "string", "contact_id": "string", "deal_id": "string", "due_date": "string" }
+      },
+      "returns": { "task": "CrmTask" }
+    },
+    {
+      "id": "media.getVideos",
+      "category": "media",
+      "name": "Список видео (Тумба)",
+      "method": "GET",
+      "path": "/media/videos",
+      "params": {
+        "query": { "category": "string", "search": "string", "limit": "number" }
+      },
+      "returns": { "videos": "Video[]" }
+    },
+    {
+      "id": "media.uploadVideo",
+      "category": "media",
+      "name": "Загрузить видео",
+      "method": "POST",
+      "path": "/media/videos",
+      "params": {
+        "body": { "title": "string", "video_url": "string", "thumbnail_url": "string", "category": "string" }
+      },
+      "returns": { "video": "Video" }
+    },
+    {
+      "id": "media.reactVideo",
+      "category": "media",
+      "name": "Реакция на видео",
+      "method": "POST",
+      "path": "/media/videos/{id}/react",
+      "params": {
+        "body": { "reaction": "like|dislike" }
+      },
+      "returns": { "likes": "number", "dislikes": "number" }
+    },
+    {
+      "id": "media.shareToMessenger",
+      "category": "media",
+      "name": "Поделиться видео в Чайка",
+      "method": "POST",
+      "path": "/media/videos/{id}/share",
+      "description": "Отправляет ссылку на видео в Чайка Мессенджер через системное событие",
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "settings.get",
+      "category": "settings",
+      "name": "Получить настройку",
+      "method": "GET",
+      "path": "/settings/{key}",
+      "returns": { "key": "string", "value": "any" }
+    },
+    {
+      "id": "settings.set",
+      "category": "settings",
+      "name": "Установить настройку",
+      "method": "PUT",
+      "path": "/settings/{key}",
+      "params": {
+        "body": { "value": "any" }
+      },
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "settings.getAll",
+      "category": "settings",
+      "name": "Все настройки",
+      "method": "GET",
+      "path": "/settings",
+      "returns": { "settings": "object" }
+    },
+    {
+      "id": "settings.resetToDefault",
+      "category": "settings",
+      "name": "Сбросить настройки",
+      "method": "POST",
+      "path": "/settings/reset",
+      "returns": { "success": "boolean" }
+    },
+    {
+      "id": "index.getValues",
+      "category": "index",
+      "name": "Значения индексов",
+      "method": "GET",
+      "path": "/index/values",
+      "description": "Возвращает актуальные значения экономических индексов Я-Россия",
+      "params": {
+        "query": { "keys": "string[]", "date_from": "string", "date_to": "string" }
+      },
+      "returns": { "values": "IndexValue[]" }
+    },
+    {
+      "id": "index.getNews",
+      "category": "index",
+      "name": "Новости по индексам",
+      "method": "GET",
+      "path": "/index/news",
+      "params": {
+        "query": { "index_key": "string", "limit": "number" }
+      },
+      "returns": { "news": "IndexNews[]" }
+    },
+    {
+      "id": "index.getMarketIndices",
+      "category": "index",
+      "name": "Рыночные индексы",
+      "method": "GET",
+      "path": "/index/market",
+      "returns": { "indices": "MarketIndex[]" }
+    }
+  ],
+  "events": {
+    "description": "Системные события Чайка ОС, доступные через window.addEventListener",
+    "list": [
+      { "name": "chaika-open-app", "detail": { "appId": "string", "shareText": "string" }, "desc": "Открыть приложение по appId" },
+      { "name": "chaika-messenger-notification", "detail": { "title": "string", "body": "string", "chatId": "string" }, "desc": "Уведомление от Мессенджера" },
+      { "name": "chaika-sysconfig-tab", "detail": { "tab": "string" }, "desc": "Переключить вкладку Системного конфигуратора" },
+      { "name": "icon-overrides-updated", "detail": {}, "desc": "Обновлены иконки приложений" },
+      { "name": "chaika-hasp-status", "detail": { "status": "found|not_found" }, "desc": "Изменён статус HASP-ключа" }
+    ]
+  },
+  "permissions": [
+    "desktop:open_app",
+    "desktop:set_wallpaper",
+    "desktop:notifications",
+    "filesystem:read",
+    "filesystem:write",
+    "filesystem:delete",
+    "storage:upload",
+    "storage:download",
+    "messenger:read",
+    "messenger:send",
+    "messenger:channels",
+    "database:read",
+    "database:write",
+    "user:profile",
+    "user:id",
+    "system:logs",
+    "system:hasp",
+    "hardware:gpio",
+    "hardware:serial",
+    "hardware:remote",
+    "ini:read",
+    "ini:write",
+    "ai:chat",
+    "ai:generate",
+    "crm:read",
+    "crm:write",
+    "media:read",
+    "media:upload"
+  ],
+  "example_app": {
+    "title": "Пример приложения для Чайка ОС",
+    "description": "Простое приложение «Привет, Чайка!» с авторизацией, уведомлением и открытием мессенджера",
+    "manifest": {
+      "name": "hello-chaika",
+      "title": "Привет, Чайка!",
+      "version": "1.0.0",
+      "url": "https://my-app.example.com",
+      "logo_emoji": "👋",
+      "description": "Демонстрационное приложение для Чайка ОС API",
+      "section": "Разработка",
+      "permissions": ["user:id", "user:profile", "desktop:notifications", "messenger:send"],
+      "min_width": 400,
+      "min_height": 300
+    },
+    "code": "// Получаем токен из URL при открытии в ОС\nconst token = new URLSearchParams(window.location.search).get('token');\n\n// Инициализация Чайка SDK\nconst sdk = new ChaikaOS({ token });\n\n// Получить профиль пользователя\nconst profile = await sdk.user.getProfile();\nconsole.log('Пользователь:', profile.username);\n\n// Отправить уведомление в ОС\nawait sdk.notifications.send({\n  title: 'Привет, Чайка!',\n  body: `Добро пожаловать, ${profile.username}!`\n});\n\n// Открыть мессенджер и написать сообщение\nwindow.dispatchEvent(new CustomEvent('chaika-open-app', {\n  detail: { appId: 'messenger', shareText: 'Привет из моего приложения!' }\n}));"
+  }
+}

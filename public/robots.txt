@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /about
+Allow: /special
+Allow: /api-docs
+Allow: /api/chaika-os-api.json
+Disallow: /admin
+Disallow: /api/
+Disallow: /_internal/
+
+Sitemap: https://chaika-os.ru/sitemap.xml
